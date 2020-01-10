@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/rootline"
+    android:background="@android:color/white">
+
+    <!--包括了webview，进度条，标题栏-->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <!--标题栏-->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:id="@+id/navline"
+            android:orientation="horizontal">
+            <!--左上返回-->
+            <TextView
+                android:id="@+id/navbacktv"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:drawableLeft="@drawable/back_normal"
+                android:drawablePadding="1dp"
+                android:gravity="center"
+                android:textColor="@color/navbartxtcolor">
+            </TextView>
+            <!--标题栏-->
+            <TextView
+                android:id="@+id/navtitle"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="6"
+                android:gravity="center"
+                android:textColor="@color/navbartitlecolor"
+                android:textStyle="bold"
+                android:textSize="16sp">
+            </TextView>
+            <!-- 右侧按钮 -->
+            <TextView
+                android:id="@+id/navright"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:textColor="@color/navbartxtcolor">
+            </TextView>
+
+        </LinearLayout>
+        <!-- 页面加载进度条 -->
+        <ProgressBar
+            android:id="@+id/webprogress"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:max="100"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            />
+
+        <!-- webview -->
+        <cn.com.hesc.hybrideandroid.components.webviewpg.ExtendsWebView
+            android:id="@+id/webview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:focusable="true"
+            android:focusableInTouchMode="true">
+        </cn.com.hesc.hybrideandroid.components.webviewpg.ExtendsWebView>
+    </LinearLayout>
+    <!--加载失败展示图-->
+    <ImageView
+        android:id="@+id/reload"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/white"
+        android:scaleType="fitCenter"
+        android:src="@drawable/reloading"
+        android:visibility="gone"/>
+</FrameLayout>
