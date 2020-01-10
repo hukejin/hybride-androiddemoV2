@@ -11,7 +11,7 @@
     ```
 
 2. 创建activity，继承cn.com.hesc.library.HybrideBaseActivity，并实现所有的接口方法
-3. 以上方法包含了https://hukejin.github.io/hybridelibrary-android/里的所有功能，可按实际业务进行部分实现
+3. 以上方法包含了https://hukejin.github.io/hybridelibrary-android/里的所有功能，可按实际业务进行实现
 4. 函数的功能请查看上述文档里的描述
 5. 通过layout或者代码引入cn.com.hesc.library.ExtendsWebView
 6. 对ExtendsWebView进行相关设置，以下代码可以直接拷贝使用
