@@ -18,7 +18,25 @@ allprojects {
     repositories {
         google()
         jcenter()
-        
+        //--------------阿里云效 maven----------------------------------------
+        maven {
+            url 'https://maven.aliyun.com/repository/public'
+        }
+
+        maven {
+            credentials {
+                username 'pLaqAV'
+                password 'Hhu5Jj5oro'
+            }
+            url 'https://repo.rdc.aliyun.com/repository/68729-release-sVD5h7/'
+        }
+        maven {
+            credentials {
+                username 'pLaqAV'
+                password 'Hhu5Jj5oro'
+            }
+            url 'https://repo.rdc.aliyun.com/repository/68729-snapshot-p8nZzr/'
+        }
     }
 }
 

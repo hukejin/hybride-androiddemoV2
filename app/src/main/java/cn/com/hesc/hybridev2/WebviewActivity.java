@@ -778,6 +778,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    loadingProgress.setVisibility(View.VISIBLE);
                     webview.reload();
                 }
             });

@@ -25,9 +25,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'androidx.test:runner:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.1.1'
-    repositories {
-        maven { url "http://192.168.1.14:8081/nexus/content/repositories/snapshots/" }
-    }
     implementation 'com.hesc.android.library:HybrideLibrary:1.0.2-SNAPSHOT'
     implementation 'com.hesc.android.library:FastDevLibrary:4.1.8-SNAPSHOT'
     implementation 'com.hesc.android.library:WebUtilsLibrary:1.8.9-SNAPSHOT'

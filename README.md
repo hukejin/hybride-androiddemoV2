@@ -1,5 +1,8 @@
 # android端使用混合开发框架库例子
 
+### 调用的API文档地址
+#### [API文档](https://hukejin.github.io/hybridelibrary-android/)
+
 ### 开发准备
 1. 在工程的build.gradle里引入库地址和架包
     ```
@@ -102,4 +105,3 @@
     ```
 8. 在图片上传时，会根据JS里设定的是否优先返回缩略图进行相关操作，请开发人员用到时仔细阅读例子代码
 9. 例子代码只为演示所有效果，并不满足所有业务，如果遇到定制业务请自行开发
-10. api文档地址：https://hukejin.github.io/hybridelibrary-android/
