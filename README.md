@@ -14,7 +14,7 @@
     ```
 
 2. 创建activity，继承cn.com.hesc.library.HybrideBaseActivity，并实现所有的接口方法
-3. 以上方法包含了https://hukejin.github.io/hybridelibrary-android/里的所有功能，可按实际业务进行实现
+3. 以上方法包含了api文档里的所有功能，可按实际业务进行实现
 4. 函数的功能请查看上述文档里的描述
 5. 通过layout或者代码引入cn.com.hesc.library.ExtendsWebView
 6. 对ExtendsWebView进行相关设置，以下代码可以直接拷贝使用
@@ -31,63 +31,63 @@
                  //页面加载失败回调，如404，5XX等
              }
          }));
-         webView.setWebChromeClient(new WebChromeClient(){
-             @Override
-             public void onProgressChanged(WebView view, final int newProgress) {
-                 //页面加载进度，newProgress进度值 0-100
+     webView.setWebChromeClient(new WebChromeClient(){
+         @Override
+         public void onProgressChanged(WebView view, final int newProgress) {
+             //页面加载进度，newProgress进度值 0-100
+         }
+            
+         /** 支持input type=file时的文件选择 */
+         protected void openFileChooser(ValueCallback uploadMsg, String acceptType)
+         {
+             mUploadMessage = uploadMsg;
+             Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+             i.addCategory(Intent.CATEGORY_OPENABLE);
+             i.setType("*/*");
+             startActivityForResult(Intent.createChooser(i, "File Browser"), FILECHOOSER_RESULTCODE);
+         }
+         // For Lollipop 5.0+ Devices
+         @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+         public boolean onShowFileChooser(WebView mWebView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams)
+         {
+             if (uploadMessage != null) {
+                 uploadMessage.onReceiveValue(null);
+                 uploadMessage = null;
              }
-                
-             /** 支持input type=file时的文件选择 */
-             protected void openFileChooser(ValueCallback uploadMsg, String acceptType)
+             uploadMessage = filePathCallback;
+             Intent intent = fileChooserParams.createIntent();
+             try
              {
-                 mUploadMessage = uploadMsg;
-                 Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-                 i.addCategory(Intent.CATEGORY_OPENABLE);
-                 i.setType("*/*");
-                 startActivityForResult(Intent.createChooser(i, "File Browser"), FILECHOOSER_RESULTCODE);
-             }
-             // For Lollipop 5.0+ Devices
-             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-             public boolean onShowFileChooser(WebView mWebView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams)
+                 startActivityForResult(intent, REQUEST_SELECT_FILE);
+             } catch (ActivityNotFoundException e)
              {
-                 if (uploadMessage != null) {
-                     uploadMessage.onReceiveValue(null);
-                     uploadMessage = null;
-                 }
-                 uploadMessage = filePathCallback;
-                 Intent intent = fileChooserParams.createIntent();
-                 try
-                 {
-                     startActivityForResult(intent, REQUEST_SELECT_FILE);
-                 } catch (ActivityNotFoundException e)
-                 {
-                     uploadMessage = null;
-                     Toast.makeText(getBaseContext(), "Cannot Open File Chooser", Toast.LENGTH_LONG).show();
-                     return false;
-                 }
-                 return true;
+                 uploadMessage = null;
+                 Toast.makeText(getBaseContext(), "Cannot Open File Chooser", Toast.LENGTH_LONG).show();
+                 return false;
              }
-             //For Android 4.1 only
-             protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture)
-             {
-                 mUploadMessage = uploadMsg;
-                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                 intent.addCategory(Intent.CATEGORY_OPENABLE);
-                 intent.setType("*/*");
-                 startActivityForResult(Intent.createChooser(intent, "File Browser"), FILECHOOSER_RESULTCODE);
-             }
-    
-             protected void openFileChooser(ValueCallback<Uri> uploadMsg)
-             {
-                 mUploadMessage = uploadMsg;
-                 Intent i = new Intent(Intent.ACTION_GET_CONTENT);
-                 i.addCategory(Intent.CATEGORY_OPENABLE);
-                 i.setType("*/*");
-                 startActivityForResult(Intent.createChooser(i, "File Chooser"), FILECHOOSER_RESULTCODE);
-             }
-         });
-         /** 建立JS桥接功能 */
-         webView.addJavascriptInterface(new JavaScriptInterface(this),"Native");
+             return true;
+         }
+         //For Android 4.1 only
+         protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture)
+         {
+             mUploadMessage = uploadMsg;
+             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+             intent.addCategory(Intent.CATEGORY_OPENABLE);
+             intent.setType("*/*");
+             startActivityForResult(Intent.createChooser(intent, "File Browser"), FILECHOOSER_RESULTCODE);
+         }
+
+         protected void openFileChooser(ValueCallback<Uri> uploadMsg)
+         {
+             mUploadMessage = uploadMsg;
+             Intent i = new Intent(Intent.ACTION_GET_CONTENT);
+             i.addCategory(Intent.CATEGORY_OPENABLE);
+             i.setType("*/*");
+             startActivityForResult(Intent.createChooser(i, "File Chooser"), FILECHOOSER_RESULTCODE);
+         }
+     });
+     /** 建立JS桥接功能 */
+     webView.addJavascriptInterface(new JavaScriptInterface(this),"Native");
     
     ```
 7. JS通信统一采用,MessageHandler作为消息载体，res可放入任何对象
