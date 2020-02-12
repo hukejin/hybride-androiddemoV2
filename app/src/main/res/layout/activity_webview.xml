@@ -28,7 +28,7 @@
                 android:drawablePadding="1dp"
                 android:gravity="center"
                 android:textColor="@color/navbartxtcolor"
-                android:text="返回">
+                android:text="">
             </TextView>
             <!--标题栏-->
             <TextView
