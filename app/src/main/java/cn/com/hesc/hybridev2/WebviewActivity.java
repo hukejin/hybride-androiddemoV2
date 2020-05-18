@@ -797,7 +797,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
                 }
             });
             leftMessageHandler = messageHandler;
-            webview.excuteJs(messageHandler);
+//            webview.excuteJs(messageHandler);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -824,7 +824,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
                 }
             });
             rightMessageHandler = messageHandler;
-            webview.excuteJs(messageHandler);
+//            webview.excuteJs(messageHandler);
         }catch (Exception e){
             e.printStackTrace();
         }
@@ -1520,7 +1520,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
             if(filterLeft){
                 leftMessageHandler.setSuccess(true);
                 webview.excuteJs(leftMessageHandler);
-                leftMessageHandler = null;
+                filterLeft = false;
             }else{
                 if(webview.canGoBack())
                     webview.goBack();
@@ -1531,7 +1531,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
             if(filterRight){
                 rightMessageHandler.setSuccess(true);
                 webview.excuteJs(rightMessageHandler);
-                rightMessageHandler = null;
+
             }
         }
     }
