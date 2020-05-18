@@ -1,5 +1,8 @@
 package cn.com.hesc.hybridev2;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -20,6 +23,8 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Gravity;
@@ -28,11 +33,14 @@ import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.widget.DatePicker;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.content.FileProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -117,6 +125,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
     public ValueCallback<Uri[]> uploadMessage;
     public static final int REQUEST_SELECT_FILE = 100;
     private final static int FILECHOOSER_RESULTCODE = 101;
+    public static final int REQUEST_CAPTURE_FILE = 102;
     /*******************************************************/
     /***日期相关*/
     private String dateFormat;//日历格式
@@ -140,6 +149,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
     private String mediaUrl;
     private MessageHandler captureMessageHandler;
     private static final int TAKE_PICTURE = 4;
+    private Uri imageUri;
     /*******************************************************/
     /***选择图片**/
     private MessageHandler multiPictureMessageHandler;
@@ -150,6 +160,14 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
     private static RecordVoice mRecordVoice;
     private static VoiceUtils mVoiceUtils;
     /*******************************************************/
+    /**input file 涉及到的选择操作*/
+    private FrameLayout mediatoolbar;
+    private TextView tocapture,tomediachoose;
+    private ImageView devider;
+    /*********************************************************/
+
+    private DisplayUtils displayUtils;
+    private Context context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,7 +175,11 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
         setContentView(R.layout.activity_webview);
         sharedPreferences = getSharedPreferences("WebViewExample",0);
 
+        context = this;
+
         gpsForUser = GpsForUser.getInstance(this);
+
+        displayUtils = new DisplayUtils(this);
 
         url = getIntent().getExtras().getString("url");
         initView();
@@ -176,6 +198,45 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
         reload.setOnClickListener(this);
         webviewSetting();
         webview.loadUrl(url);
+        mediatoolbar = (FrameLayout) findViewById(R.id.mediatoolbar);
+        mediatoolbar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if (uploadMessage != null) {
+                    uploadMessage.onReceiveValue(null);
+                    uploadMessage = null;
+                }
+                mediatoolbar.setVisibility(View.GONE);
+            }
+        });
+        tocapture = (TextView)findViewById(R.id.tocapture);
+        tocapture.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mediatoolbar.setVisibility(View.GONE);
+                //打开照相机
+                Intent openCameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                imageUri = getOutputMediaFileUri(WebviewActivity.this);
+                openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+
+                //Android7.0添加临时权限标记，此步千万别忘了
+                openCameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                startActivityForResult(openCameraIntent, REQUEST_CAPTURE_FILE);
+            }
+        });
+        tomediachoose = (TextView)findViewById(R.id.tomediachoose);
+        tomediachoose.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent it = new Intent(WebviewActivity.this, MultiplePicActivity.class);
+                Bundle bl = new Bundle();
+                bl.putInt("piccount",3);
+                it.putExtras(bl);
+                startActivityForResult(it,REQUEST_SELECT_FILE);
+            }
+        });
+        devider = (ImageView)findViewById(R.id.devider);
     }
 
     /**
@@ -219,7 +280,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
                 });
             }
 
-            //实现 input type=file的做法 可直接拷贝
+            //实现 input type=file的做法 可直接拷贝 Android  >= 3.0
             protected void openFileChooser(ValueCallback uploadMsg, String acceptType)
             {
                 mUploadMessage = uploadMsg;
@@ -228,28 +289,81 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
                 i.setType("*/*");
                 startActivityForResult(Intent.createChooser(i, "File Browser"), FILECHOOSER_RESULTCODE);
             }
-            // For Lollipop 5.0+ Devices 实现 input type=file的做法 可直接拷贝
+            // For Lollipop 5.0+ Devices 实现 input type=file的做法 可直接拷贝 Android >= 5.0
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-            public boolean onShowFileChooser(WebView mWebView, ValueCallback<Uri[]> filePathCallback, FileChooserParams fileChooserParams)
+            public boolean onShowFileChooser(WebView mWebView, ValueCallback<Uri[]> filePathCallback, final FileChooserParams fileChooserParams)
             {
                 if (uploadMessage != null) {
                     uploadMessage.onReceiveValue(null);
                     uploadMessage = null;
                 }
                 uploadMessage = filePathCallback;
-                Intent intent = fileChooserParams.createIntent();
-                try
-                {
-                    startActivityForResult(intent, REQUEST_SELECT_FILE);
-                } catch (ActivityNotFoundException e)
-                {
-                    uploadMessage = null;
-                    Toast.makeText(getBaseContext(), "Cannot Open File Chooser", Toast.LENGTH_LONG).show();
-                    return false;
+
+
+                mediatoolbar.setVisibility(View.VISIBLE);
+                if(fileChooserParams.isCaptureEnabled()){
+                    tocapture.setVisibility(View.VISIBLE);
+                }else{
+                    tocapture.setVisibility(View.GONE);
+                    devider.setVisibility(View.GONE);
                 }
+
+                if(fileChooserParams.getMode() == 1){
+                    tomediachoose.setVisibility(View.VISIBLE);
+                }else{
+                    tomediachoose.setVisibility(View.GONE);
+                    devider.setVisibility(View.GONE);
+                }
+
+
+                //添加相机和相册的支持
+//                final HescMaterialDialog materialDialog = new HescMaterialDialog(WebviewActivity.this);
+//                materialDialog.showSignalDialog("请选择上传方式", "确定", "取消", new String[]{"拍照", "相册"}, 0, new HescMaterialDialog.ButtonCallback() {
+//                    @Override
+//                    public void onPositive(HescMaterialDialog dialog) {
+//                        super.onPositive(dialog);
+//                        String item = materialDialog.getMultiItems().get(0);
+//                        if("拍照".equals(item)){
+//                            //打开照相机
+//                            Intent openCameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+//                            imageUri = getOutputMediaFileUri(WebviewActivity.this);
+//                            openCameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
+//
+//                            //Android7.0添加临时权限标记，此步千万别忘了
+//                            openCameraIntent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//                            startActivityForResult(openCameraIntent, REQUEST_CAPTURE_FILE);
+//                        }else{
+//                            Intent intent = fileChooserParams.createIntent();
+//                                try
+//                                {
+//                                    startActivityForResult(intent, REQUEST_SELECT_FILE);
+//                                }
+//                                catch (ActivityNotFoundException e)
+//                                {
+//                                    e.printStackTrace();
+//                                }
+//                        }
+//                    }
+//
+//                    @Override
+//                    public void onNegative(HescMaterialDialog dialog) {
+//                        super.onNegative(dialog);
+//                    }
+//                });
+
+//                Intent intent = fileChooserParams.createIntent();
+//                try
+//                {
+//                    startActivityForResult(intent, REQUEST_SELECT_FILE);
+//                } catch (ActivityNotFoundException e)
+//                {
+//                    uploadMessage = null;
+//                    Toast.makeText(getBaseContext(), "Cannot Open File Chooser", Toast.LENGTH_LONG).show();
+//                    return false;
+//                }
                 return true;
             }
-            //For Android 4.1 only 实现 input type=file的做法 可直接拷贝
+            //For Android 4.1 only 实现 input type=file的做法 可直接拷贝 Android  >= 4.1
             protected void openFileChooser(ValueCallback<Uri> uploadMsg, String acceptType, String capture)
             {
                 mUploadMessage = uploadMsg;
@@ -259,7 +373,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
                 startActivityForResult(Intent.createChooser(intent, "File Browser"), FILECHOOSER_RESULTCODE);
             }
 
-            //实现 input type=file的做法 可直接拷贝
+            //实现 input type=file的做法 可直接拷贝 Android < 3.0
             protected void openFileChooser(ValueCallback<Uri> uploadMsg)
             {
                 mUploadMessage = uploadMsg;
@@ -270,6 +384,37 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
             }
         });
         webview.addJavascriptInterface(new JavaScriptInterface(this),"Native");
+    }
+
+    public static Uri getOutputMediaFileUri(Context context) {
+        File mediaFile = null;
+        String cameraPath;
+        try {
+            File mediaStorageDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath());
+            if (!mediaStorageDir.exists()) {
+                if (!mediaStorageDir.mkdirs()) {
+                    return null;
+                }
+            }
+            mediaFile = new File(mediaStorageDir.getPath()
+                    + File.separator
+                    + "Pictures/temp.jpg");//注意这里需要和filepaths.xml中配置的一样
+            cameraPath = mediaFile.getAbsolutePath();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {// sdk >= 24  android7.0以上
+            Uri contentUri = FileProvider.getUriForFile(context,
+                    context.getApplicationContext().getPackageName() + ".provider",//与清单文件中android:authorities的值保持一致
+                    mediaFile);//FileProvider方式或者ContentProvider。也可使用VmPolicy方式
+            return contentUri;
+
+        } else {
+            return Uri.fromFile(mediaFile);//或者 Uri.isPaise("file://"+file.toString()
+
+        }
     }
 
     /**
@@ -1345,6 +1490,27 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
         }
     }
 
+    /**
+     * 通过JS调用任何原生功能
+     * @param messageHandler 回调JS的数据
+     * @param params 从JS传来的数据
+     */
+    @Override
+    protected void nativeMethod(MessageHandler messageHandler, String params) {
+        /*
+        * 这里进行很多原生开发
+        * */
+        try{
+            JSONObject jsonObject = new JSONObject(params);
+            String href = jsonObject.getString("url");
+            ToastUtils.showShort(WebviewActivity.this,"从js传来的:"+href);
+            webview.excuteJs(messageHandler);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+    }
+
     @Override
     public void onClick(View view) {
         if(view == reload){
@@ -1548,8 +1714,42 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
                 {
                     if (uploadMessage == null)
                         return;
-                    uploadMessage.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
+                    Bundle bl = data.getExtras();
+                    List<String> list = bl.getStringArrayList("pics");
+                    Uri[] uris = new Uri[list.size()];
+                    for (int i = 0; i < list.size(); i++) {
+                        File mediaFile = new File(list.get(i));
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {// sdk >= 24  android7.0以上
+                            Uri contentUri = FileProvider.getUriForFile(context,
+                                    context.getApplicationContext().getPackageName() + ".provider",//与清单文件中android:authorities的值保持一致
+                                    mediaFile);//FileProvider方式或者ContentProvider。也可使用VmPolicy方式
+                            uris[i] = contentUri;
+
+                        } else {
+                            uris[i] = Uri.fromFile(mediaFile);//或者 Uri.isPaise("file://"+file.toString()
+
+                        }
+
+
+                    }
+                    uploadMessage.onReceiveValue(uris);
+//                    uploadMessage.onReceiveValue(WebChromeClient.FileChooserParams.parseResult(resultCode, data));
                     uploadMessage = null;
+
+                    mediatoolbar.setVisibility(View.GONE);
+                }
+                break;
+            case REQUEST_CAPTURE_FILE:
+                if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+                {
+                    if (uploadMessage == null)
+                        return;
+                    Uri[] uris = new Uri[1];
+                    uris[0] = imageUri;
+                    uploadMessage.onReceiveValue(uris);
+                    uploadMessage = null;
+
+                    mediatoolbar.setVisibility(View.GONE);
                 }
                 break;
             case FILECHOOSER_RESULTCODE:
