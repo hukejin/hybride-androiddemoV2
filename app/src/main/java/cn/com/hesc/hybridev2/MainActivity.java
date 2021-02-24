@@ -47,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent it = new Intent(MainActivity.this, WebviewActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putString("url","http://192.168.0.105:8080/");
+        bundle.putString("url","http://192.168.0.106:8080/");
         it.putExtras(bundle);
         startActivity(it);
     }
