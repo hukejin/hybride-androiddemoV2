@@ -5,9 +5,19 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.Manifest;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.Buffer;
+
 import cn.com.hesc.tools.CheckPermissonUtils;
+import cn.com.hesc.tools.SdcardInfo;
 import cn.com.hesc.tools.ToastUtils;
 import cn.com.hesc.zxinglibrary.android.CaptureActivity;
 import cn.com.hesc.zxinglibrary.bean.ZxingConfig;
@@ -47,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
 
         Intent it = new Intent(MainActivity.this, WebviewActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putString("url","http://192.168.0.106:8080/");
+        bundle.putString("url","http://47.111.93.13/hybriddemo-vue/#");
         it.putExtras(bundle);
         startActivity(it);
     }
@@ -72,5 +82,30 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
         }
+    }
+
+    public void toMerge(View view) throws IOException {
+        String basePath = SdcardInfo.getInstance().getSdcardpath()+"/DCIM/Camera/tianyi/33010200001327216764";
+        File file = new File(basePath);
+        if(!file.exists()){
+            Log.e("file","is not exits");
+            return;
+        }
+        File[] files = file.listFiles();
+        File desc = new File(basePath+"/temp.mp4");
+        if(!desc.exists())
+            desc.createNewFile();
+        OutputStream outputStream = new FileOutputStream(desc);
+        for (int i = 0; i < files.length; i++) {
+            File file1 = files[i];
+            InputStream inputStream = new FileInputStream(file1);
+            byte[] buffe = new byte[2048];
+            while (inputStream.read(buffe)!=-1){
+                outputStream.write(buffe);
+            }
+            Log.e("finish",file1.getAbsolutePath());
+            inputStream.close();
+        }
+        outputStream.close();
     }
 }

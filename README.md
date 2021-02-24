@@ -1,4 +1,4 @@
-# android端使用混合开发框架库例子
+# android端使用混合开发框架库例子，完成JS和android原生之间调用的实现，思路参考钉钉
 
 ### 调用的API文档地址
 #### [API文档](https://hukejin.github.io/hybridelibrary-android/)
