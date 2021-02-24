@@ -1575,7 +1575,7 @@ public class WebviewActivity extends HybrideBaseActivity implements OnDateSetLis
 //                .setWheelItemTextSelectorColor(getResources().getColor(R.color.timepicker_toolbar_bg))
                 .setWheelItemTextSize(12)
                 .build();
-        mDialogAll.show(getSupportFragmentManager(),"all");
+//        mDialogAll.show(getFragmentManager(),"all");
     }
 
     private void toScan(String codeType){
