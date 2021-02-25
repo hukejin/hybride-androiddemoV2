@@ -8,9 +8,9 @@
     ```
     repositories 
     {
-        maven { url "http://192.168.1.14:8081/nexus/content/repositories/snapshots/" }
+        maven { url "http://172.16.40.14:8081/nexus/content/repositories/snapshots/" }
     }
-    implementation 'com.hesc.android.library:HybrideLibrary:1.0.1-SNAPSHOT'
+    implementation 'com.hesc.android.library:HybrideLibrary:1.0.6-SNAPSHOT'
     ```
 
 2. 创建activity，继承cn.com.hesc.library.HybrideBaseActivity，并实现所有的接口方法
